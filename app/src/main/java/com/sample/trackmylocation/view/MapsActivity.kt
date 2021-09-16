@@ -1,15 +1,15 @@
-package com.sample.trackmylocation
+package com.sample.trackmylocation.view
 
 import android.graphics.Color
 import android.graphics.Point
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.maps.*
-import com.google.android.gms.maps.GoogleMap.OnMapLoadedCallback
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.maps.android.PolyUtil
+import com.sample.trackmylocation.R
 import kotlin.math.abs
 
 
@@ -53,7 +53,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         //addMarker at Starting Point
         addMarker(sourcePoints[0])
 
-        mGoogleMap.setOnMapLoadedCallback(OnMapLoadedCallback {
+        mGoogleMap.setOnMapLoadedCallback {
             var polyLineOptions = PolylineOptions()
             polyLineOptions.addAll(sourcePoints)
             polyLineOptions.width(10f)
@@ -63,7 +63,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 //            val carPos = LatLng(-35.281120, 149.129721)
             val carPos = sourcePoints.last()
 //            addMarker(carPos)
-            mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(carPos, 15f))
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(carPos, 15f))
             for (i in 0 until sourcePoints.size - 1) {
                 val segmentP1 = sourcePoints[i]
                 val segmentP2 = sourcePoints[i + 1]
@@ -76,12 +76,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     polyLineOptions.width(10f)
                     polyLineOptions.color(Color.RED)
                     mGoogleMap.addPolyline(polyLineOptions)
-                    val snappedToSegment = getMarkerProjectionOnSegment(carPos, segment, mGoogleMap.projection)
+                    val snappedToSegment =
+                        getMarkerProjectionOnSegment(carPos, segment, mGoogleMap.projection)
                     addMarker(snappedToSegment)
                     break
                 }
             }
-        })
+        }
     }
     private fun getMarkerProjectionOnSegment(carPos: LatLng, segment: List<LatLng>, projection: Projection): LatLng? {
         var markerProjection: LatLng? = null

@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">TrackMyLocation</string>
     <string name="title_activity_maps">Map</string>
+    <string name="track_your_journey">Track Your Journey</string>
+    <string name="description">Realtime tracking your ride with Google Map. And get details like Time Distance Avg-Speed and many more.\n\nYou can even view them later from Room database\n\nGive it a Try</string>
 </resources>

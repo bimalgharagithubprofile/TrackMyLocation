@@ -1,0 +1,26 @@
+
+ext {
+
+    ext.versions = [
+            'minSdk'       : 21,
+            'compileSdk'   : 30,
+            'buildTools'   : '30.0.2',
+            'constraint'  : '2.1.0',
+            'material'     : '1.2.0',
+            'sdp'          : '1.0.6'
+    ]
+
+    ext.deps = [
+            constraintlayout : [
+                    'constraintlayout'  : "androidx.constraintlayout:constraintlayout:${versions.constraint}"
+            ],
+            material : [
+                    'material'  : "com.google.android.material:material:${versions.material}"
+            ],
+            sdp: [
+                    'sdp': "com.intuit.sdp:sdp-android:${versions.sdp}"
+            ]
+
+    ]
+
+}
