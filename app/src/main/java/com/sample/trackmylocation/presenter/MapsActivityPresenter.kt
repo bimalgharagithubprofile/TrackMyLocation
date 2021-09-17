@@ -2,8 +2,12 @@ package com.sample.trackmylocation.presenter
 
 import android.content.Context
 import android.location.Location
+import com.sample.trackmylocation.database.AppDatabase
+import com.sample.trackmylocation.database.entities.EntityJourneyDetails
 import com.sample.trackmylocation.model.LastLocation
 import com.sample.trackmylocation.utils.log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.*
@@ -11,18 +15,11 @@ import kotlin.collections.ArrayList
 import kotlin.math.*
 
 class MapsActivityPresenter(private var view: View) {
-
     var lastLocation: MutableList<LastLocation> = ArrayList()
-
 
     fun setNewLocation(location: Location?) {
         location?.let {
             lastLocation.add(LastLocation(it))
-
-            /*if(lastLocation.size == 1)
-                view.initCamera(it)
-            else
-                view.moveCamera(it)*/
 
             view.moveCamera()
         }
@@ -66,12 +63,24 @@ class MapsActivityPresenter(private var view: View) {
         return formatter.format(this)
     }
 
-    fun saveJourneyData(context: Context) {
+    suspend fun saveJourneyData(context: Context, journeyDetails: EntityJourneyDetails) {
+        val db: AppDatabase = AppDatabase.invoke(context)
 
+        val rs = db.getJourneyDetailsDao().saveThis(journeyDetails)
+
+        withContext(Dispatchers.Main) {
+            if (rs < 0) {
+                view.databaseOperationStatus(false, "Failed to Insert")
+            } else {
+                view.databaseOperationStatus(true, null)
+            }
+        }
     }
 
     interface View {
         fun moveCamera()
+
+        fun databaseOperationStatus(success: Boolean, errorMessage: String?)
 
         fun showProgressBar()
         fun hideProgressBar()

@@ -1,11 +1,9 @@
 package com.sample.trackmylocation.view
 
-import android.Manifest
 import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -15,6 +13,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.sample.trackmylocation.R
+import com.sample.trackmylocation.database.entities.EntityJourneyDetails
 import com.sample.trackmylocation.model.LastLocation
 import com.sample.trackmylocation.model.LocationEvent
 import com.sample.trackmylocation.presenter.MapsActivityPresenter
@@ -33,8 +32,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
     private lateinit var mGoogleMap: GoogleMap
 
     lateinit var myLocationManager: MyLocationManager
+    lateinit var journeyDetails: EntityJourneyDetails
 
-    lateinit var presenter: MapsActivityPresenter
+    private lateinit var presenter: MapsActivityPresenter
 
     private val DEFAULT_ZOOM = 15f
 
@@ -79,8 +79,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
             .setPositiveButton("Proceed") { dialog, id ->
                 dialog.dismiss()
 
+                //stop location service
+                myLocationManager.stopLocationUpdates()
+
                 //save this Journey Data into Room DB
-                presenter.saveJourneyData(this)
+                if(this::journeyDetails.isInitialized) {
+                    showProgressBar()
+                    Coroutines.io(lifecycleScope) {
+                        presenter.saveJourneyData(this, journeyDetails)
+                    }
+                }else {
+                    toast("No Journey Details to save !")
+                    finish()
+                }
             }
 
         val alert = dialogBuilder.create()
@@ -153,25 +164,31 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
             vStartedAt.text = startedAt
         }
 
-        if(endPoc == null){
-            withContext(Dispatchers.Main) {
-                vDuration.text = "0 min"
-                vDistance.text = "0 m"
-                vSpeed.text = "0.0 m/s"
-            }
-        } else {
-            val duration = presenter.calculateDuration(endLocation!!.location.time, startedLocation.location.time)
-
-            val distance = presenter.calculateDistance(startedPoc.latitude, startedPoc.longitude, endPoc.latitude, endPoc.longitude)
-
-            val speed = presenter.calculateSpeed(endLocation.location.time, startedLocation.location.time, distance.toDouble())
-
-            withContext(Dispatchers.Main){
-                vDuration.text = "$duration min"
-                vDistance.text = "$distance m"
-                vSpeed.text = "$speed m/s"
-            }
+        var tmpDuration = "0"
+        var tmpDistance = "0"
+        var tmpSpeed = "0.0"
+        if(endPoc != null) {
+            tmpDuration = presenter.calculateDuration(endLocation!!.location.time, startedLocation.location.time)
+            tmpDistance = presenter.calculateDistance(startedPoc.latitude, startedPoc.longitude, endPoc.latitude, endPoc.longitude).toString()
+            tmpSpeed = presenter.calculateSpeed(endLocation.location.time, startedLocation.location.time, tmpDistance.toDouble())
         }
+        //finalise the phase
+        val duration = "$tmpDuration min"
+        val distance = "$tmpDistance m"
+        val speed = "$tmpSpeed m/s"
+
+        withContext(Dispatchers.Main){
+            vDuration.text = duration
+            vDistance.text = distance
+            vSpeed.text = speed
+        }
+
+        this.journeyDetails = EntityJourneyDetails(
+            startedAt,
+            duration,
+            distance,
+            speed
+        )
     }
 
     override fun moveCamera() = Coroutines.io(lifecycleScope){
@@ -195,6 +212,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
         addJourneyDetails(startedLocation, endLocation)
 
         hideProgressBar()
+    }
+
+    override fun databaseOperationStatus(success: Boolean, errorMessage: String?) {
+        hideProgressBar()
+        if(!errorMessage.isNullOrEmpty() || !success){
+                toast(errorMessage!!)
+        } else {
+            toast("Journey Details Saved")
+            finish()
+        }
     }
 
     override fun showProgressBar() {

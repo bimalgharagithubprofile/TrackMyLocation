@@ -14,11 +14,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import com.sample.trackmylocation.R
+import com.sample.trackmylocation.presenter.HomeActivityPresenter
 import com.sample.trackmylocation.utils.log
 import com.sample.trackmylocation.utils.toast
 import kotlinx.android.synthetic.main.activity_home.*
 
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : AppCompatActivity(), HomeActivityPresenter.View {
+
+    private lateinit var presenter: HomeActivityPresenter
 
     companion object {
         val PERMISSIONS_REQUEST_ACCESS_LOCATION_FOREGROUND = 1
@@ -29,6 +32,8 @@ class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        presenter = HomeActivityPresenter(this)
 
         initClickListener()
 
@@ -105,5 +110,14 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun updatedJourneyList(list: String?) {
+    }
+
+    override fun showProgressBar() {
+    }
+
+    override fun hideProgressBar() {
     }
 }
