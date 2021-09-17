@@ -1,13 +1,16 @@
 package com.sample.trackmylocation.view
 
-import android.content.Intent
+import android.Manifest
 import android.graphics.Color
-import android.graphics.Point
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.maps.*
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
@@ -15,32 +18,27 @@ import com.sample.trackmylocation.R
 import com.sample.trackmylocation.model.LastLocation
 import com.sample.trackmylocation.model.LocationEvent
 import com.sample.trackmylocation.presenter.MapsActivityPresenter
-import com.sample.trackmylocation.services.LocationService
-import com.sample.trackmylocation.utils.Coroutines
-import com.sample.trackmylocation.utils.hide
-import com.sample.trackmylocation.utils.log
-import com.sample.trackmylocation.utils.show
+import com.sample.trackmylocation.services.MyLocationManager
+import com.sample.trackmylocation.utils.*
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import java.lang.Math.abs
-import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresenter.View {
 
     private lateinit var mGoogleMap: GoogleMap
 
+    lateinit var myLocationManager: MyLocationManager
+
     lateinit var presenter: MapsActivityPresenter
 
-//    private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
     private val DEFAULT_ZOOM = 15f
 
+    private var isStarted = false;
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,9 +48,44 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        myLocationManager = MyLocationManager.getInstance(this)
+
         presenter = MapsActivityPresenter(this)
 
-        ContextCompat.startForegroundService(this, Intent(this, LocationService::class.java))
+        try {
+            showProgressBar()
+            myLocationManager.startLocationUpdates()
+        }catch (e: SecurityException){
+            e.printStackTrace()
+            toast("Unable to Start Journey")
+            finish()
+        }
+
+        initClicks()
+    }
+
+    private fun initClicks() {
+        btn_end.setOnClickListener {
+            dialogStopJourney()
+        }
+    }
+
+
+    private fun dialogStopJourney() {
+        val dialogBuilder = AlertDialog.Builder(this)
+
+        dialogBuilder.setMessage(R.string.confirm_end_journey)
+            .setCancelable(false)
+            .setPositiveButton("Proceed") { dialog, id ->
+                dialog.dismiss()
+
+                //save this Journey Data into Room DB
+                presenter.saveJourneyData(this)
+            }
+
+        val alert = dialogBuilder.create()
+        alert.setTitle("End Journey")
+        alert.show()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -75,85 +108,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
 
     override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
-
-//        presenter.getDeviceLocation(this)
-
-
-
-
-        /*mGoogleMap.setOnMapLoadedCallback {
-            val sourcePoints: MutableList<LatLng> = ArrayList()
-            sourcePoints.add(LatLng(-35.27801, 149.12958))
-
-            var polyLineOptions = PolylineOptions()
-//            polyLineOptions.addAll(sourcePoints)
-//            polyLineOptions.width(10f)
-//            polyLineOptions.color(Color.BLUE)
-//            mGoogleMap.addPolyline(polyLineOptions)
-
-            val carPos = sourcePoints.last()
-            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(carPos, 15f))
-            for (i in 0 until sourcePoints.size - 1) {
-                val segmentP1 = sourcePoints[i]
-                val segmentP2 = sourcePoints[i + 1]
-                val segment: MutableList<LatLng> = ArrayList(2)
-                segment.add(segmentP1)
-                segment.add(segmentP2)
-                if (PolyUtil.isLocationOnPath(carPos, segment, true, 30.0)) {
-                    polyLineOptions = PolylineOptions()
-                    polyLineOptions.addAll(segment)
-                    polyLineOptions.width(10f)
-                    polyLineOptions.color(Color.RED)
-                    mGoogleMap.addPolyline(polyLineOptions)
-//                    val snappedToSegment = getMarkerProjectionOnSegment(carPos, segment, mGoogleMap.projection)
-//                    addMarker(snappedToSegment)
-                    break
-                }
-            }
-        }*/
     }
-    /*private fun getMarkerProjectionOnSegment(carPos: LatLng, segment: List<LatLng>, projection: Projection): LatLng? {
-        var markerProjection: LatLng? = null
-        val carPosOnScreen: Point = projection.toScreenLocation(carPos)
-        val p1: Point = projection.toScreenLocation(segment[0])
-        val p2: Point = projection.toScreenLocation(segment[1])
-        val carPosOnSegment = Point()
-        val denominator: Float = ((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)).toFloat()
-        // p1 and p2 are the same
-        if (kotlin.math.abs(denominator) <= 1E-10) {
-            markerProjection = segment[0]
-        } else {
-            val t: Float = (carPosOnScreen.x * (p2.x - p1.x) - (p2.x - p1.x) * p1.x
-                    + carPosOnScreen.y * (p2.y - p1.y) - (p2.y - p1.y) * p1.y) / denominator
-            carPosOnSegment.x = ((p1.x + (p2.x - p1.x) * t)).toInt()
-            carPosOnSegment.y = ((p1.y + (p2.y - p1.y) * t)).toInt()
-            markerProjection = projection.fromScreenLocation(carPosOnSegment)
-        }
-        return markerProjection
-    }*/
-    /*private fun addMarker(latLng: LatLng?) {
-        latLng?.let {
 
-        }
-    }*/
-
-
-    /*override fun initCamera(location: Location) {
-        val currentPosition = LatLng(location.latitude, location.longitude)
-        mGoogleMap.addMarker(
-            MarkerOptions()
-                .position(currentPosition)
-        )
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, DEFAULT_ZOOM))
-    }
-    override fun moveCamera(location: Location) {
-        val currentPosition = LatLng(location.latitude, location.longitude)
-        mGoogleMap.addMarker(
-            MarkerOptions()
-                .position(currentPosition)
-        )
-        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, DEFAULT_ZOOM))
-    }*/
     private fun addMarkers(startedLocation: LastLocation, endLocation: LastLocation?) {
         //started Marker
         mGoogleMap.addMarker(
@@ -208,7 +164,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
 
             val distance = presenter.calculateDistance(startedPoc.latitude, startedPoc.longitude, endPoc.latitude, endPoc.longitude)
 
-            val speed = presenter.calculateSpeed(endLocation!!.location.time, startedLocation.location.time, distance.toDouble())
+            val speed = presenter.calculateSpeed(endLocation.location.time, startedLocation.location.time, distance.toDouble())
 
             withContext(Dispatchers.Main){
                 vDuration.text = "$duration min"
@@ -237,6 +193,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
             addPolyline()
 
         addJourneyDetails(startedLocation, endLocation)
+
+        hideProgressBar()
     }
 
     override fun showProgressBar() {
@@ -246,4 +204,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
     override fun hideProgressBar() {
         vProgressBar.hide()
     }
+
+    override fun onBackPressed() {
+        log("Back Button Clicked")
+
+        dialogStopJourney()
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.sample.trackmylocation.presenter
 
+import android.content.Context
 import android.location.Location
 import com.sample.trackmylocation.model.LastLocation
 import com.sample.trackmylocation.utils.log
@@ -63,6 +64,10 @@ class MapsActivityPresenter(private var view: View) {
     private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
         val formatter = SimpleDateFormat(format, locale)
         return formatter.format(this)
+    }
+
+    fun saveJourneyData(context: Context) {
+
     }
 
     interface View {

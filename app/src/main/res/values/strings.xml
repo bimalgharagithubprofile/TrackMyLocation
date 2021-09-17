@@ -5,4 +5,6 @@
     <string name="description">Realtime tracking your ride with Google Map. And get details like Time Distance Avg-Speed and many more.\n\nYou can even view them later from Room database\n\nGive it a Try</string>
     <string name="end_journey">End Journey</string>
     <string name="start_journey">Start Journey</string>
+    <string name="background_location_permission_rationale">The background location permission is needed for enhanced functionality.</string>
+    <string name="confirm_end_journey">Are you sure you want to end this journey?</string>
 </resources>
