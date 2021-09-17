@@ -43,7 +43,14 @@ dependencies {
     implementation deps.material.material
     implementation deps.constraintlayout.constraintlayout
 
+    implementation deps.lifecycle.livedataKtx
+    implementation deps.lifecycle.viewmodelKtx
+    implementation deps.lifecycle.runtimeKtx
+
+    implementation deps.eventbus.eventbus
+
     implementation 'com.google.android.gms:play-services-maps:17.0.1'
     implementation 'com.google.maps.android:android-maps-utils:2.2.6'
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
 
 }

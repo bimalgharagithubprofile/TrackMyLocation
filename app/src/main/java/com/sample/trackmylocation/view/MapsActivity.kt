@@ -1,68 +1,94 @@
 package com.sample.trackmylocation.view
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Point
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.maps.android.PolyUtil
 import com.sample.trackmylocation.R
-import kotlin.math.abs
+import com.sample.trackmylocation.model.LastLocation
+import com.sample.trackmylocation.model.LocationEvent
+import com.sample.trackmylocation.presenter.MapsActivityPresenter
+import com.sample.trackmylocation.services.LocationService
+import com.sample.trackmylocation.utils.Coroutines
+import com.sample.trackmylocation.utils.hide
+import com.sample.trackmylocation.utils.log
+import com.sample.trackmylocation.utils.show
+import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
+import java.lang.Math.abs
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresenter.View {
 
     private lateinit var mGoogleMap: GoogleMap
+
+    lateinit var presenter: MapsActivityPresenter
+
+//    private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
+    private val DEFAULT_ZOOM = 15f
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
+
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        presenter = MapsActivityPresenter(this)
+
+        ContextCompat.startForegroundService(this, Intent(this, LocationService::class.java))
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMessageEvent(event: LocationEvent?) {
+        event?.let {
+            log("Considering New Location: ${it.location.latitude}, ${it.location.longitude}")
+            presenter.setNewLocation(it.location)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
     override fun onMapReady(googleMap: GoogleMap) {
         mGoogleMap = googleMap
 
-        val sourcePoints: MutableList<LatLng> = ArrayList()
+//        presenter.getDeviceLocation(this)
 
-        //just to initiate the Polyline giving some hardcoded values
-        sourcePoints.add(LatLng(-35.27801, 149.12958))
-        sourcePoints.add(LatLng(-35.28032, 149.12907))
-        sourcePoints.add(LatLng(-35.28099, 149.12929))
-        sourcePoints.add(LatLng(-35.28144, 149.12984))
-        sourcePoints.add(LatLng(-35.28194, 149.13003))
-        sourcePoints.add(LatLng(-35.28282, 149.12956))
-        sourcePoints.add(LatLng(-35.28302, 149.12881))
-        sourcePoints.add(LatLng(-35.28473, 149.12836))
 
-        //addMarker at Starting Point
-        addMarker(sourcePoints[0])
 
-        mGoogleMap.setOnMapLoadedCallback {
+
+        /*mGoogleMap.setOnMapLoadedCallback {
+            val sourcePoints: MutableList<LatLng> = ArrayList()
+            sourcePoints.add(LatLng(-35.27801, 149.12958))
+
             var polyLineOptions = PolylineOptions()
-            polyLineOptions.addAll(sourcePoints)
-            polyLineOptions.width(10f)
-            polyLineOptions.color(Color.BLUE)
-            mGoogleMap.addPolyline(polyLineOptions)
+//            polyLineOptions.addAll(sourcePoints)
+//            polyLineOptions.width(10f)
+//            polyLineOptions.color(Color.BLUE)
+//            mGoogleMap.addPolyline(polyLineOptions)
 
-//            val carPos = LatLng(-35.281120, 149.129721)
             val carPos = sourcePoints.last()
-//            addMarker(carPos)
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(carPos, 15f))
             for (i in 0 until sourcePoints.size - 1) {
                 val segmentP1 = sourcePoints[i]
@@ -76,15 +102,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     polyLineOptions.width(10f)
                     polyLineOptions.color(Color.RED)
                     mGoogleMap.addPolyline(polyLineOptions)
-                    val snappedToSegment =
-                        getMarkerProjectionOnSegment(carPos, segment, mGoogleMap.projection)
-                    addMarker(snappedToSegment)
+//                    val snappedToSegment = getMarkerProjectionOnSegment(carPos, segment, mGoogleMap.projection)
+//                    addMarker(snappedToSegment)
                     break
                 }
             }
-        }
+        }*/
     }
-    private fun getMarkerProjectionOnSegment(carPos: LatLng, segment: List<LatLng>, projection: Projection): LatLng? {
+    /*private fun getMarkerProjectionOnSegment(carPos: LatLng, segment: List<LatLng>, projection: Projection): LatLng? {
         var markerProjection: LatLng? = null
         val carPosOnScreen: Point = projection.toScreenLocation(carPos)
         val p1: Point = projection.toScreenLocation(segment[0])
@@ -92,7 +117,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val carPosOnSegment = Point()
         val denominator: Float = ((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)).toFloat()
         // p1 and p2 are the same
-        if (abs(denominator) <= 1E-10) {
+        if (kotlin.math.abs(denominator) <= 1E-10) {
             markerProjection = segment[0]
         } else {
             val t: Float = (carPosOnScreen.x * (p2.x - p1.x) - (p2.x - p1.x) * p1.x
@@ -102,12 +127,83 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             markerProjection = projection.fromScreenLocation(carPosOnSegment)
         }
         return markerProjection
-    }
-    private fun addMarker(latLng: LatLng?) {
+    }*/
+    /*private fun addMarker(latLng: LatLng?) {
         latLng?.let {
-            mGoogleMap.addMarker(MarkerOptions()
-                    .position(it)
-            )
+
         }
+    }*/
+
+
+    /*override fun initCamera(location: Location) {
+        val currentPosition = LatLng(location.latitude, location.longitude)
+        mGoogleMap.addMarker(
+            MarkerOptions()
+                .position(currentPosition)
+        )
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, DEFAULT_ZOOM))
+    }
+    override fun moveCamera(location: Location) {
+        val currentPosition = LatLng(location.latitude, location.longitude)
+        mGoogleMap.addMarker(
+            MarkerOptions()
+                .position(currentPosition)
+        )
+        mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, DEFAULT_ZOOM))
+    }*/
+    private fun addMarkers(startedLocation: LastLocation, endLocation: LastLocation?) {
+        //started Marker
+        mGoogleMap.addMarker(
+            MarkerOptions()
+                .position(LatLng(startedLocation.location.latitude, startedLocation.location.longitude))
+        )
+        //end Marker
+        if(endLocation != null){
+            mGoogleMap.addMarker(
+                MarkerOptions()
+                    .position(LatLng(endLocation.location.latitude, endLocation.location.longitude))
+            )
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(endLocation.location.latitude, endLocation.location.longitude), DEFAULT_ZOOM))
+        } else {
+            mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(startedLocation.location.latitude, startedLocation.location.longitude), DEFAULT_ZOOM))
+        }
+    }
+
+    private suspend fun addPolyline() {
+        val sourcePoints: MutableList<LatLng> = ArrayList()
+        for(location in presenter.lastLocation)
+            sourcePoints.add(LatLng(location.location.latitude, location.location.longitude))
+
+        val polyLineOptions = PolylineOptions()
+        polyLineOptions.addAll(sourcePoints)
+        polyLineOptions.width(13f)
+        polyLineOptions.color(Color.BLUE)
+
+        withContext(Dispatchers.Main) {
+            mGoogleMap.addPolyline(polyLineOptions)
+        }
+    }
+
+    override fun moveCamera() = Coroutines.io(lifecycleScope){
+        val startedLocation = presenter.lastLocation.first()
+        var endLocation: LastLocation?=null
+        if(presenter.lastLocation.size > 1)
+            endLocation = presenter.lastLocation.last()
+
+        withContext(Dispatchers.Main) {
+            mGoogleMap.clear()
+            addMarkers(startedLocation, endLocation)
+        }
+
+        if(presenter.lastLocation.size > 1)
+            addPolyline()
+    }
+
+    override fun showProgressBar() {
+        vProgressBar.show()
+    }
+
+    override fun hideProgressBar() {
+        vProgressBar.hide()
     }
 }
