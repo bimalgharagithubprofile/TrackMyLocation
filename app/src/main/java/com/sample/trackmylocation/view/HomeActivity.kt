@@ -2,7 +2,6 @@ package com.sample.trackmylocation.view
 
 import android.Manifest
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -12,12 +11,15 @@ import android.provider.Settings
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.material.snackbar.Snackbar
+import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import com.sample.trackmylocation.R
 import com.sample.trackmylocation.presenter.HomeActivityPresenter
+import com.sample.trackmylocation.utils.Coroutines
 import com.sample.trackmylocation.utils.log
 import com.sample.trackmylocation.utils.toast
 import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.coroutines.CoroutineScope
 
 class HomeActivity : AppCompatActivity(), HomeActivityPresenter.View {
 
@@ -37,6 +39,18 @@ class HomeActivity : AppCompatActivity(), HomeActivityPresenter.View {
 
         initClickListener()
 
+        getJourneyListsFromRoomDatabase()
+
+    }
+
+    private fun getJourneyListsFromRoomDatabase() = Coroutines.main(lifecycleScope){
+        presenter.getJourneyList(this).observe(this, Observer {
+            log("Database records: $it")
+
+            if (it.isNotEmpty())
+                vSavedJourney.text = "${it.size} Previous journey(s)"
+
+        })
     }
 
 
@@ -112,8 +126,6 @@ class HomeActivity : AppCompatActivity(), HomeActivityPresenter.View {
         }
     }
 
-    override fun updatedJourneyList(list: String?) {
-    }
 
     override fun showProgressBar() {
     }
