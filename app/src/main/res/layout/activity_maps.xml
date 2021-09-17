@@ -10,7 +10,92 @@
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintTop_toTopOf="parent"
+        map:layout_constraintBottom_toTopOf="@+id/details_layout" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/details_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/_15sdp"
+        map:layout_constraintBottom_toBottomOf="parent"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/vDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintTop_toTopOf="parent"
+            map:layout_constraintBottom_toTopOf="@+id/vStartedAt"
+            android:layout_marginBottom="@dimen/_20sdp"
+            map:drawableStartCompat="@drawable/ic_time_30"
+            android:drawablePadding="@dimen/_10sdp"
+            android:text="20 min"
+            android:textSize="@dimen/_20sdp"
+            android:textStyle="bold"
+            />
+        <TextView
+            android:id="@+id/vStartedAt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintBottom_toTopOf="@+id/btn_end"
+            android:layout_marginBottom="@dimen/_20sdp"
+            map:drawableStartCompat="@drawable/ic_started_30"
+            android:drawablePadding="@dimen/_10sdp"
+            android:text="09.20 am"
+            android:textSize="@dimen/_20sdp"
+            android:textStyle="bold"
+            />
+        <TextView
+            android:id="@+id/vDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            map:layout_constraintEnd_toEndOf="parent"
+            map:layout_constraintTop_toTopOf="parent"
+            map:layout_constraintBottom_toTopOf="@+id/vSpeed"
+            android:layout_marginBottom="@dimen/_20sdp"
+            map:drawableEndCompat="@drawable/ic_distance_30"
+            android:drawablePadding="@dimen/_10sdp"
+            android:text="31 KM"
+            android:textSize="@dimen/_20sdp"
+            android:textStyle="bold"
+            />
+        <TextView
+            android:id="@+id/vSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            map:layout_constraintEnd_toEndOf="parent"
+            map:layout_constraintBottom_toTopOf="@+id/btn_end"
+            android:layout_marginBottom="@dimen/_20sdp"
+            map:drawableEndCompat="@drawable/ic_speed_30"
+            android:drawablePadding="@dimen/_10sdp"
+            android:text="17km/m"
+            android:textSize="@dimen/_20sdp"
+            android:textStyle="bold"
+            />
+        <Button
+            android:id="@+id/btn_end"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            map:layout_constraintBottom_toBottomOf="parent"
+            map:layout_constraintStart_toStartOf="parent"
+            map:layout_constraintEnd_toEndOf="parent"
+            android:text="End Journey"
+            />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_5sdp"
+        map:layout_constraintTop_toTopOf="@+id/details_layout"
+        android:background="@drawable/inner_shadow_gradient"/>
+
+
 
     <ProgressBar
         android:id="@+id/vProgressBar"
