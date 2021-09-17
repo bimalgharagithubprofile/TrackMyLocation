@@ -27,6 +27,9 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.lang.Math.abs
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresenter.View {
@@ -168,7 +171,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(startedLocation.location.latitude, startedLocation.location.longitude), DEFAULT_ZOOM))
         }
     }
-
     private suspend fun addPolyline() {
         val sourcePoints: MutableList<LatLng> = ArrayList()
         for(location in presenter.lastLocation)
@@ -183,11 +185,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
             mGoogleMap.addPolyline(polyLineOptions)
         }
     }
+    private suspend fun addJourneyDetails(startedLocation: LastLocation, endLocation: LastLocation?) {
+        val startedPoc = LatLng(startedLocation.location.latitude, startedLocation.location.longitude)
+        var endPoc: LatLng?=null
+        if(endLocation!=null)
+            endPoc = LatLng(endLocation.location.latitude, endLocation.location.longitude)
+
+
+        val startedAt = presenter.calculateStartedAt(startedLocation.location.time, "hh:mm a")
+        withContext(Dispatchers.Main){
+            vStartedAt.text = startedAt
+        }
+
+        if(endPoc == null){
+            withContext(Dispatchers.Main) {
+                vDuration.text = "0 min"
+                vDistance.text = "0 m"
+                vSpeed.text = "0.0 m/s"
+            }
+        } else {
+            val duration = presenter.calculateDuration(endLocation!!.location.time, startedLocation.location.time)
+
+            val distance = presenter.calculateDistance(startedPoc.latitude, startedPoc.longitude, endPoc.latitude, endPoc.longitude)
+
+            val speed = presenter.calculateSpeed(endLocation!!.location.time, startedLocation.location.time, distance.toDouble())
+
+            withContext(Dispatchers.Main){
+                vDuration.text = "$duration min"
+                vDistance.text = "$distance m"
+                vSpeed.text = "$speed m/s"
+            }
+        }
+    }
 
     override fun moveCamera() = Coroutines.io(lifecycleScope){
+        var isInitial = true
+        if(presenter.lastLocation.size > 1)
+            isInitial = false
+
         val startedLocation = presenter.lastLocation.first()
         var endLocation: LastLocation?=null
-        if(presenter.lastLocation.size > 1)
+        if(!isInitial)
             endLocation = presenter.lastLocation.last()
 
         withContext(Dispatchers.Main) {
@@ -195,8 +233,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
             addMarkers(startedLocation, endLocation)
         }
 
-        if(presenter.lastLocation.size > 1)
+        if(!isInitial)
             addPolyline()
+
+        addJourneyDetails(startedLocation, endLocation)
     }
 
     override fun showProgressBar() {

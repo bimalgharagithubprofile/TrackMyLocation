@@ -39,7 +39,7 @@
         android:layout_marginBottom="@dimen/_50sdp"
         android:layout_marginStart="@dimen/_20sdp"
         android:layout_marginEnd="@dimen/_20sdp"
-        android:text="Start Journey"
+        android:text="@string/start_journey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>

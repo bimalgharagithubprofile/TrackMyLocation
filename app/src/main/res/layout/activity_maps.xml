@@ -35,7 +35,7 @@
             android:layout_marginBottom="@dimen/_20sdp"
             map:drawableStartCompat="@drawable/ic_time_30"
             android:drawablePadding="@dimen/_10sdp"
-            android:text="20 min"
+            android:text="0 min"
             android:textSize="@dimen/_20sdp"
             android:textStyle="bold"
             />
@@ -48,7 +48,7 @@
             android:layout_marginBottom="@dimen/_20sdp"
             map:drawableStartCompat="@drawable/ic_started_30"
             android:drawablePadding="@dimen/_10sdp"
-            android:text="09.20 am"
+            android:text="00.00 am"
             android:textSize="@dimen/_20sdp"
             android:textStyle="bold"
             />
@@ -62,7 +62,7 @@
             android:layout_marginBottom="@dimen/_20sdp"
             map:drawableEndCompat="@drawable/ic_distance_30"
             android:drawablePadding="@dimen/_10sdp"
-            android:text="31 KM"
+            android:text="0 m"
             android:textSize="@dimen/_20sdp"
             android:textStyle="bold"
             />
@@ -75,7 +75,7 @@
             android:layout_marginBottom="@dimen/_20sdp"
             map:drawableEndCompat="@drawable/ic_speed_30"
             android:drawablePadding="@dimen/_10sdp"
-            android:text="17km/m"
+            android:text="0.0 m/s"
             android:textSize="@dimen/_20sdp"
             android:textStyle="bold"
             />
@@ -86,7 +86,7 @@
             map:layout_constraintBottom_toBottomOf="parent"
             map:layout_constraintStart_toStartOf="parent"
             map:layout_constraintEnd_toEndOf="parent"
-            android:text="End Journey"
+            android:text="@string/end_journey"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
     <View

@@ -1,12 +1,13 @@
 package com.sample.trackmylocation.presenter
 
-import android.content.Context
 import android.location.Location
-import android.util.Log
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.sample.trackmylocation.model.LastLocation
-import com.sample.trackmylocation.view.HomeActivity.Companion.mLocationPermissionGranted
+import com.sample.trackmylocation.utils.log
+import java.math.RoundingMode
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.math.*
 
 class MapsActivityPresenter(private var view: View) {
 
@@ -26,38 +27,45 @@ class MapsActivityPresenter(private var view: View) {
         }
     }
 
-    /*fun getDeviceLocation(
-        context: Context
-    ) {
-        try {
-            view.showProgressBar()
+    fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Int {
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lng2 - lng1)
+        val a = (sin(dLat / 2) * sin(dLat / 2)
+                + (cos(Math.toRadians(lat1))
+                * cos(Math.toRadians(lat2)) * sin(dLon / 2)
+                * sin(dLon / 2)))
+        val c = 2 * asin(sqrt(a))
+        return (6371000 * c).roundToInt()
+    }
 
-            val mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-            if (mLocationPermissionGranted) {
-                val locationResult = mFusedLocationProviderClient.lastLocation
-                locationResult.addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        task.result?.let {
-                            setNewLocation(task.result)
-                            view.moveCamera(task.result)
-                        }
-                    } else {
-                        Log.d("chk", "Current location is null. Using defaults.")
-                        Log.e("chk", "Exception: %s", task.exception)
-                    }
-                }
-            }
-        } catch (e: SecurityException) {
-            Log.e("Exception: %s", e.message!!)
-        } finally {
-            view.hideProgressBar()
-        }
-    }*/
+    fun calculateSpeed(currentTime: Long, oldTime: Long, distance: Double): String {
+        val timeDifferent: Double = (currentTime - oldTime).toDouble()
+        val speed: Double = distance / timeDifferent
 
+        val shorten = speed.toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
+
+        return shorten.toString()
+    }
+
+    fun calculateDuration(currentTime: Long, oldTime: Long): String {
+        val diff: Long = (currentTime - oldTime)
+        val seconds = diff / 1000
+        val minutes = seconds / 60
+
+        return minutes.toString()
+    }
+
+    fun calculateStartedAt(time: Long, format: String): String {
+        val date = Date(time)
+        return date.toString(format)
+    }
+
+    private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
+        val formatter = SimpleDateFormat(format, locale)
+        return formatter.format(this)
+    }
 
     interface View {
-//        fun initCamera(location: Location)
-//        fun moveCamera(location: Location)
         fun moveCamera()
 
         fun showProgressBar()
