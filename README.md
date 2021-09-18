@@ -9,12 +9,12 @@ In order to get live location this app use `BACKGROUND_LOCATION` and this need t
 
 You must allow specific permission which is 'Allow all the time'. This will allow this app to use location form background
 
-## Limitaion of BACKGROUND_LOCATION
+## Limitation of BACKGROUND_LOCATION
 
 From Android 8.0 (API level 26) onwards limits how frequently an app can retrieve the user's current location.
 
-When app is running in the FOREGROUND - apps can receive location updates quite frequently. But,
-When app is running in the FOREGROUND - apps can receive location updates very less frequently.
+When app is running in the FOREGROUND - app can receive location updates quite frequently. But,
+When app is running in the BACKROUND - app can receive location updates very less frequently.
 
 ## Start New Journey
 
