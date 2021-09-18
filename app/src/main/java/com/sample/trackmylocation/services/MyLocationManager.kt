@@ -11,7 +11,6 @@ import com.google.android.gms.location.LocationServices
 import com.sample.trackmylocation.utils.log
 import java.util.concurrent.TimeUnit
 
-private const val TAG = "chk"
 
 class MyLocationManager private constructor(private val context: Context) {
 

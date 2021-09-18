@@ -77,7 +77,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
 
         dialogBuilder.setMessage(R.string.confirm_end_journey)
             .setCancelable(true)
-            .setPositiveButton("Proceed") { dialog, id ->
+            .setPositiveButton("End") { dialog, id ->
                 dialog.dismiss()
 
                 //stop location service
@@ -85,8 +85,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
 
                 //save this Journey Data into Room DB
                 if(this::journeyDetails.isInitialized) {
-                    showProgressBar()
-                    Coroutines.io(lifecycleScope) {
+                    Coroutines.main(lifecycleScope) {
                         presenter.saveJourneyData(this, journeyDetails)
                     }
                 }else {
@@ -221,7 +220,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
     }
 
     override fun databaseOperationStatus(success: Boolean, errorMessage: String?) {
-        hideProgressBar()
         if(!errorMessage.isNullOrEmpty() || !success){
                 toast(errorMessage!!)
         } else {

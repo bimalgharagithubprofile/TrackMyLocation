@@ -18,7 +18,7 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
             LocationResult.extractResult(intent).let { locationResult ->
                 locationResult?.let {
                     val location = locationResult.locations[0]
-                    log("new Location: ${location.latitude}, ${location.longitude} <> ${location.time}")
+                    log("new Location: ${location.latitude}, ${location.longitude}")
                     EventBus.getDefault().post(LocationEvent(location))
                 }
             }

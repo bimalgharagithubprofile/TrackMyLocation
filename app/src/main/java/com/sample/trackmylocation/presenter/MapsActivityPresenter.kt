@@ -78,17 +78,18 @@ class MapsActivityPresenter(private var view: View) {
     }
 
     suspend fun saveJourneyData(context: Context, journeyDetails: EntityJourneyDetails) {
-        val db: AppDatabase = AppDatabase.invoke(context)
+        view.showProgressBar()
+         val rs = withContext(Dispatchers.IO) {
+            val db: AppDatabase = AppDatabase.invoke(context)
 
-        val rs = db.getJourneyDetailsDao().saveThis(journeyDetails)
-
-        withContext(Dispatchers.Main) {
-            if (rs < 0) {
-                view.databaseOperationStatus(false, "Failed to Insert")
-            } else {
-                view.databaseOperationStatus(true, null)
-            }
+            return@withContext db.getJourneyDetailsDao().saveThis(journeyDetails)
         }
+        if (rs < 0) {
+            view.databaseOperationStatus(false, "Failed to Insert")
+        } else {
+            view.databaseOperationStatus(true, null)
+        }
+        view.hideProgressBar()
     }
 
     interface View {
