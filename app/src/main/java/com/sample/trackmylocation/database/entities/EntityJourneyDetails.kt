@@ -9,11 +9,11 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 @Entity
 data class EntityJourneyDetails(
+    @PrimaryKey(autoGenerate = true)
+    var id: Int? = null,
+
     val startedAt: String,
     val duration: String,
     val distance: String,
     val speed: String
-): Parcelable {
-    @PrimaryKey(autoGenerate = true)
-    var id: Int? = null //this will gen id automatically by the room itself
-}
+): Parcelable

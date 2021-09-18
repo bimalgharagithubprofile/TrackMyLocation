@@ -9,6 +9,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
@@ -36,7 +37,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
 
     private lateinit var presenter: MapsActivityPresenter
 
-    private val DEFAULT_ZOOM = 15f
+    private val DEFAULT_ZOOM = 18f
 
     private var isStarted = false;
 
@@ -75,7 +76,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
         val dialogBuilder = AlertDialog.Builder(this)
 
         dialogBuilder.setMessage(R.string.confirm_end_journey)
-            .setCancelable(false)
+            .setCancelable(true)
             .setPositiveButton("Proceed") { dialog, id ->
                 dialog.dismiss()
 
@@ -92,6 +93,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
                     toast("No Journey Details to save !")
                     finish()
                 }
+            }
+            .setNegativeButton("Not Yet") { dialog, id ->
+                dialog.dismiss()
             }
 
         val alert = dialogBuilder.create()
@@ -126,12 +130,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
         mGoogleMap.addMarker(
             MarkerOptions()
                 .position(LatLng(startedLocation.location.latitude, startedLocation.location.longitude))
+                .icon(presenter.bitmapFromVector(this, R.drawable.pin_drop_30))
         )
         //end Marker
         if(endLocation != null){
             mGoogleMap.addMarker(
                 MarkerOptions()
                     .position(LatLng(endLocation.location.latitude, endLocation.location.longitude))
+                    .icon(presenter.bitmapFromVector(this, R.drawable.bike_30))
             )
             mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(endLocation.location.latitude, endLocation.location.longitude), DEFAULT_ZOOM))
         } else {
@@ -184,10 +190,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapsActivityPresen
         }
 
         this.journeyDetails = EntityJourneyDetails(
-            startedAt,
-            duration,
-            distance,
-            speed
+            startedAt = startedAt,
+            duration = duration,
+            distance = distance,
+            speed = speed
         )
     }
 

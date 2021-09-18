@@ -1,7 +1,12 @@
 package com.sample.trackmylocation.presenter
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.location.Location
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.sample.trackmylocation.database.AppDatabase
 import com.sample.trackmylocation.database.entities.EntityJourneyDetails
 import com.sample.trackmylocation.model.LastLocation
@@ -61,6 +66,15 @@ class MapsActivityPresenter(private var view: View) {
     private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
         val formatter = SimpleDateFormat(format, locale)
         return formatter.format(this)
+    }
+
+    fun bitmapFromVector(context:Context, vectorResID:Int): BitmapDescriptor {
+        val vectorDrawable= ContextCompat.getDrawable(context,vectorResID)
+        vectorDrawable!!.setBounds(0,0, vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth,vectorDrawable.intrinsicHeight,Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        vectorDrawable.draw(canvas)
+        return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
 
     suspend fun saveJourneyData(context: Context, journeyDetails: EntityJourneyDetails) {

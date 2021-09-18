@@ -96,7 +96,7 @@ class HomeActivity : AppCompatActivity(), HomeActivityPresenter.View {
 
         dialogBuilder.setMessage(R.string.background_location_permission_rationale)
             .setCancelable(false)
-            .setPositiveButton("Proceed") { dialog, id ->
+            .setPositiveButton("Agree") { dialog, id ->
                 toast("Allow all the time")
 
                 ActivityCompat.requestPermissions(this@HomeActivity, arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), PERMISSIONS_REQUEST_ACCESS_LOCATION_BACKGROUND)
